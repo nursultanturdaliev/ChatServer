@@ -1,27 +1,29 @@
 package kg.nurolopher;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
+import java.util.HashSet;
 
-/**
- * Created by Acer on 04.10.2014.
- */
 public class ChatServer {
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Usage: java ChatServer <port number>");
-            System.exit(1);
-        }
 
-        int portNumber = Integer.parseInt(args[0]);
+    private static final int PORT = 9001;
 
-        try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
+    public static HashSet<PrintWriter> writers = new HashSet<>();
+
+    public static HashSet<String> names = new HashSet<>();
+
+    public static void main(String[] args) throws Exception {
+
+        System.out.println("The chat server is running");
+        ServerSocket socket = new ServerSocket(PORT);
+        try {
             while (true) {
-                new ServerThread(serverSocket.accept()).start();
+                new ServerThread(socket.accept()).start();
             }
-        } catch (IOException e) {
-            System.err.println("Could not listen on port " + portNumber);
-            System.exit(-1);
+        } finally {
+            socket.close();
         }
+
     }
 }

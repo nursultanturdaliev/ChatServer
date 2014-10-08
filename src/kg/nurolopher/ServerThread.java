@@ -7,7 +7,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ServerThread extends Thread {
+
+    private String name;
     private Socket socket = null;
+    private BufferedReader in;
+    private PrintWriter out;
 
     public ServerThread(Socket socket) {
         this.socket = socket;
@@ -15,18 +19,55 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
-        try (
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        ) {
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                out.println(inputLine);
+
+        try {
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+
+            while (true) {
+                out.println("SUBMITNAME");
+                name = in.readLine();
+                if (name == null) {
+                    return;
+                }
+
+                synchronized (ChatServer.names) {
+                    if (!ChatServer.names.contains(name)) {
+                        ChatServer.names.add(name);
+                        break;
+                    }
+                }
             }
-            socket.close();
+            out.println("NAMEACCEPTED");
+            ChatServer.writers.add(out);
+
+            while (true) {
+                String input = in.readLine();
+                if (input == null) {
+                    return;
+                }
+                for (PrintWriter writer : ChatServer.writers) {
+                    writer.println("MESSAGE " + name + ": " + input);
+                }
+            }
+
+
         } catch (IOException e) {
-            System.err.println("An error occurred: " + e.getMessage());
-            System.exit(-1);
+            System.out.println(e.getMessage());
+        } finally {
+            if (name != null) {
+                ChatServer.names.remove(name);
+            }
+            if (out != null) {
+                ChatServer.writers.remove(out);
+            }
+            try {
+                socket.close();
+            } catch (IOException e) {
+
+            }
         }
     }
+
 }
