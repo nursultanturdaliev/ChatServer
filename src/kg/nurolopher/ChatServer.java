@@ -1,13 +1,13 @@
 package kg.nurolopher;
 
-import java.io.IOException;
+import javax.swing.*;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.util.HashSet;
 
 public class ChatServer {
 
-    private static final int PORT = 9001;
+    private static int PORT;
 
     public static HashSet<PrintWriter> writers = new HashSet<>();
 
@@ -15,7 +15,8 @@ public class ChatServer {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println("The chat server is running");
+        ChatServer.getPortNumber();
+        System.out.println("Running on port: " + PORT);
         ServerSocket socket = new ServerSocket(PORT);
         try {
             while (true) {
@@ -25,5 +26,13 @@ public class ChatServer {
             socket.close();
         }
 
+    }
+
+    public static void getPortNumber() {
+        String port = JOptionPane.showInputDialog("Server port number", "5555");
+        while (!(port.matches("[0-9]+") && port.length() > 1)) {
+            getPortNumber();
+        }
+        PORT = Integer.parseInt(port);
     }
 }
